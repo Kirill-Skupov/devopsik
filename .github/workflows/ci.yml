@@ -55,14 +55,14 @@ jobs:
       - name: Create test report
         if: always()
         run: |
-          echo "Creating test report..."
-          cat > test-report.md << EOF
+          $report = @"
           # Deployment Test Report
-          - Date: $(date)
+          - Date: $(Get-Date)
           - Application Status: Healthy
           - Database: Connected
           - Containers: Running
-          EOF
+          "@
+          Set-Content -Path "test-report.md" -Value $report
 
       - name: Save Docker logs and artifacts
         if: always()
