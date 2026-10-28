@@ -43,14 +43,21 @@ jobs:
 
       - name: Run application tests
         run: |
-          echo "Running application tests..."
-          if curl -f http://localhost:${{ secrets.APP_PORT }}/api/items; then
-            echo "Web application API is working"
-          else
-            echo "Web application API check failed"
-            docker compose logs
-            exit 1
-          fi
+          Write-Host "Running application tests..."
+          try {
+              $response = Invoke-WebRequest -Uri "http://localhost:${{ secrets.APP_PORT }}/api/items" -UseBasicParsing
+              if ($response.StatusCode -eq 200) {
+                  Write-Host "Web application API is working"
+              } else {
+                  Write-Host "Web application API returned status code: $($response.StatusCode)"
+                  docker compose logs
+                  exit 1
+              }
+          } catch {
+              Write-Host "Web application API check failed: $_"
+              docker compose logs
+              exit 1
+          }
 
       - name: Create test report
         if: always()
