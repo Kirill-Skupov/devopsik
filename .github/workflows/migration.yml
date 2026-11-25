@@ -48,10 +48,13 @@ jobs:
       # 3. Поднятие целевого контейнера PostgreSQL для приема данных
       - name: Start Target PostgreSQL
         if: steps.check_status.outputs.already_migrated == 'false'
+        env:
+          DB_POSTGRES_PASSWORD: ${{ secrets.DB_POSTGRES_PASSWORD }}
+          DB_MYSQL_ROOT_PASSWORD: ${{ secrets.DB_MYSQL_ROOT_PASSWORD }}
         run: |
           docker compose -f $COMPOSE_FILE up -d db-postgres
           echo "Waiting for PostgreSQL to initialize..."
-          sleep 10
+          sleep 15
 
       # 4. Гетерогенная миграция данных с помощью pgloader
       - name: Run pgloader (With Schema Drop for Idempotency)
@@ -70,6 +73,9 @@ jobs:
 
       # 6. Остановка старого стека и развертывание обновленного продакшн-стека
       - name: Deploy Upgraded Stack
+        env:
+          DB_POSTGRES_PASSWORD: ${{ secrets.DB_POSTGRES_PASSWORD }}
+          DB_MYSQL_ROOT_PASSWORD: ${{ secrets.DB_MYSQL_ROOT_PASSWORD }}
         run: |
           echo "Stopping legacy containers if running..."
           docker rm -f mattermost mattermost-mysql 2>/dev/null || true
